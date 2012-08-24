@@ -101,7 +101,7 @@ class BaseEntryAdmin(M2MPlaceholderAdmin):
     prepopulated_fields = not settings.DEBUG and {'slug': ('title',)} or {}
     
     search_fields = ('entrytitle__title', 'tags')
-    list_display = ('title', 'languages', 'author', 'is_published', 'pub_date')
+    list_display = ('title', 'tags', 'languages', 'author', 'is_published', 'pub_date')
     list_editable = ('is_published',)
     list_filter = ('is_published', 'pub_date')
     date_hierarchy = 'pub_date'
