@@ -132,3 +132,11 @@ class LatestEntriesPlugin(CMSPlugin):
                     
     current_language_only = models.BooleanField(_('Only show entries for the current language'))
     tagged = models.CharField(max_length=255, blank=True)
+
+class ArchivePlugin(CMSPlugin):
+    """
+        Model for the settings when using the archive plugin
+    """    
+    tagged = models.CharField(max_length=255, blank=True)
+    optionalTemplate = models.URLField( max_length=255, verbose_name= ('Optional template'), 
+                    help_text= ('Use this field only if there are multiple tags'), blank=True)
