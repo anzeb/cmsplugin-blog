@@ -11,6 +11,7 @@ from cms.models.pluginmodel import CMSPlugin
 from simple_translation.utils import get_translation_filter_language
 
 from cmsplugin_blog.models import LatestEntriesPlugin, Entry, ArchivePlugin
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 class CMSLatestEntriesPlugin(CMSPluginBase):
     """
@@ -42,13 +43,28 @@ class CMSLatestEntriesPlugin(CMSPluginBase):
             # change render template - using tag
             self.render_template = "cmsplugin_blog/latest_entries_" + str(tags[0]) + ".html"        
 
+        #limit number of objects with 'limit'
         latest = qs[:instance.limit]
-        
+
+        #set number of objects on page to 'limit'
+        paginator = Paginator(qs, instance.limit)
+        page = context["request"].GET.get('page')
+        try:
+            paginator_list = paginator.page(page)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            paginator_list = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            paginator_list = paginator.page(paginator.num_pages)
+
+
         context.update({
             'instance': instance,
             'latest': latest,
-            'object_list': latest,
-            'placeholder': placeholder
+            'object_list': paginator_list,
+            'placeholder': placeholder,
+
         })
         return context
 
