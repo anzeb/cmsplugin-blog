@@ -18,17 +18,59 @@ class CMSLatestEntriesPlugin(CMSPluginBase):
         Plugin class for the latest entries
     """
     model = LatestEntriesPlugin
-    name = _('Latest entries')
-    render_template = "cmsplugin_blog/latest_entries.html"
+    name = _('Latest entries - index page')
+    render_template = "cmsplugin_blog/index_latest_entries.html"
     
     def render(self, context, instance, placeholder):
         """
             Render the latest entries
         """
+        qs = Entry.published.all()
+        
+        if instance.current_language_only:
+            language = get_language_from_request(context["request"])
+            kw = get_translation_filter_language(Entry, language)
+            qs = qs.filter(**kw)
+            
+        if instance.tagged:
+            tags = get_tag_list(instance.tagged)
+            qs  = TaggedItem.objects.get_by_model(qs , tags)
+            # change render template - using tag
+            self.render_template = "cmsplugin_blog/index_latest_entries_" + str(tags[0]) + ".html"
+
+              
+            
+        latest = qs[:instance.limit]
+        
+        context.update({
+            'instance': instance,
+            'latest': latest,
+            'object_list': latest,
+            'placeholder': placeholder
+        })
+        return context
+
+plugin_pool.register_plugin(CMSLatestEntriesPlugin)
+
+class CMSLatestEntriesCustomPlugin(CMSPluginBase):
+    """
+        Plugin class for the latest entries and detail view of one entry
+    """
+    model = LatestEntriesPlugin
+    name = _('Latest entries')
+    render_template = "cmsplugin_blog/latest_entries.html"
+    
+    def render(self, context, instance, placeholder):
+        """
+            Render the latest entries on page
+        """
         if 'month' in context["request"].GET and 'year' in context["request"].GET :
             month = context["request"].GET['month']
             year = context["request"].GET['year']
             qs = Entry.published.filter(pub_date__month=month, pub_date__year=year)
+        elif 'detail' in context["request"].GET:
+            entry_id = context["request"].GET['detail']
+            qs = Entry.published.filter(id=entry_id)
         else:
             qs = Entry.published.all()
         
@@ -68,7 +110,7 @@ class CMSLatestEntriesPlugin(CMSPluginBase):
         })
         return context
 
-plugin_pool.register_plugin(CMSLatestEntriesPlugin)
+plugin_pool.register_plugin(CMSLatestEntriesCustomPlugin)
 
 class SideMenu(CMSPluginBase):
     """
